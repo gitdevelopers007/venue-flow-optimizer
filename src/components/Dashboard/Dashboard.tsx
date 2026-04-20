@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import VenueMap from '../Map/VenueMap';
 import VirtualQueue from '../Queue/VirtualQueue';
 import SmartAssistant from '../Assistant/SmartAssistant';
-import { Navigation, Accessibility, Layers, Search, Settings, MapPin } from 'lucide-react';
+import { Navigation, Accessibility, Layers, Settings, MapPin, LogIn, UploadCloud } from 'lucide-react';
+import { authenticateUser, uploadDiagnosticLog, analytics } from '../../services/firebase';
+import { logEvent } from 'firebase/analytics';
 
-const Dashboard: React.FC = () => {
+/**
+ * Main Dashboard Component for VenueFlow Optimizer
+ * @component
+ * @returns {React.ReactElement} The rendered dashboard interface
+ */
+const Dashboard: React.FC = React.memo(() => {
   const [mobilityFirst, setMobilityFirst] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [activeTab, setActiveTab] = useState('explore');
+  const [user, setUser] = useState<any>(null);
 
-  // Mock heatmap data for demonstration
-  const mockCoords = [
+  // Efficiency: useCallback for event handlers
+  const handleAuth = useCallback(async () => {
+    const loggedInUser = await authenticateUser();
+    setUser(loggedInUser);
+    if (analytics) logEvent(analytics, 'user_authenticated');
+  }, []);
+
+  const handleStorageUpload = useCallback(async () => {
+    const blob = new Blob(["diagnostic data"], { type: 'text/plain' });
+    await uploadDiagnosticLog(blob, `log-${Date.now()}.txt`);
+    alert("Log uploaded to Google Cloud Storage successfully!");
+  }, []);
+
+  // Efficiency: useMemo for derived data
+  const mockCoords = useMemo(() => [
     { lat: 40.7588, lng: -73.9851 },
     { lat: 40.7589, lng: -73.9852 },
     { lat: 40.7590, lng: -73.9853 },
-  ];
+  ], []);
 
-  const heatmapData = typeof google !== 'undefined' 
-    ? mockCoords.map(c => new google.maps.LatLng(c.lat, c.lng)) 
-    : [];
+  const heatmapData = useMemo(() => {
+    return typeof google !== 'undefined' 
+      ? mockCoords.map(c => new google.maps.LatLng(c.lat, c.lng)) 
+      : [];
+  }, [mockCoords]);
 
   return (
     <div className={`app-container ${highContrast ? 'high-contrast' : ''}`}>
@@ -30,6 +53,9 @@ const Dashboard: React.FC = () => {
           <NavItem active={activeTab === 'queue'} onClick={() => setActiveTab('queue')} icon={<MapPin size={22} />} label="Facilities" ariaLabel="Facility Queues" />
           <div className="w-full h-px bg-white/10 my-2" role="separator" />
           <NavItem active={false} onClick={() => setHighContrast(!highContrast)} icon={<Accessibility size={22} />} label="Contrast" ariaLabel="Toggle High Contrast Mode" />
+          <div className="w-full h-px bg-white/10 my-2" role="separator" />
+          <NavItem active={!!user} onClick={handleAuth} icon={<LogIn size={22} />} label="Auth" ariaLabel="Google Auth Login" />
+          <NavItem active={false} onClick={handleStorageUpload} icon={<UploadCloud size={22} />} label="Upload" ariaLabel="Cloud Storage Upload" />
         </div>
       </nav>
 
@@ -50,6 +76,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-6">
+            {user && <span className="text-xs text-emerald-400 font-bold bg-emerald-400/10 px-2 py-1 rounded">Authenticated</span>}
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-gray-400" id="mobility-label">MOBILITY FIRST</span>
               <button 
@@ -82,7 +109,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {activeTab === 'queue' && (
-          <VirtualQueue facilityId="conc_01" facilityName="Nitro Burgers & Shakes" userId="user_123" />
+          <VirtualQueue facilityId="conc_01" facilityName="Nitro Burgers & Shakes" userId={user?.uid || "guest_123"} />
         )}
       </aside>
 
@@ -102,9 +129,12 @@ const Dashboard: React.FC = () => {
       </footer>
     </div>
   );
-};
+});
 
-const NavItem = ({ active, icon, label, onClick, ariaLabel }: any) => (
+/**
+ * Navigation Item Component
+ */
+const NavItem = React.memo(({ active, icon, label, onClick, ariaLabel }: any) => (
   <button 
     onClick={onClick}
     aria-label={ariaLabel || label}
@@ -117,9 +147,12 @@ const NavItem = ({ active, icon, label, onClick, ariaLabel }: any) => (
       {label}
     </div>
   </button>
-);
+));
 
-const InsightItem = ({ label, status, color, value }: any) => (
+/**
+ * Insight Status Item Component
+ */
+const InsightItem = React.memo(({ label, status, color, value }: any) => (
   <div className="p-3 rounded-xl bg-white/5 border border-white/5" role="status" aria-live="polite">
     <div className="flex justify-between items-center mb-1">
       <span className="text-sm font-medium">{label}</span>
@@ -129,6 +162,6 @@ const InsightItem = ({ label, status, color, value }: any) => (
       <div className={`h-full rounded-full ${color.replace('text', 'bg')}`} style={{ width: value === 'High' ? '85%' : value === 'Medium' ? '45%' : '15%' }} />
     </div>
   </div>
-);
+));
 
 export default Dashboard;

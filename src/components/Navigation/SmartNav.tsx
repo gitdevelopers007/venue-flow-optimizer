@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouteResult } from '../../engine/types';
+import type { RouteResult } from '../../engine/types';
 import { MapPin, Navigation, Clock, ShieldCheck } from 'lucide-react';
 
 interface SmartNavProps {

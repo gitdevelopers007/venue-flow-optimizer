@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RoutingEngine } from '../engine/routing';
-import { VenueGraph } from '../engine/types';
+import type { VenueGraph } from '../engine/types';
 
 describe('RoutingEngine - Predictive Load Balancing', () => {
   const mockGraph: VenueGraph = {

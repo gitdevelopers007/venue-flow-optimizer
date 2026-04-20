@@ -38,7 +38,7 @@ const VenueMap: React.FC<MapProps> = ({ heatmapData, onMapClick }) => {
     libraries: ['visualization']
   });
 
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [_map, setMap] = useState<google.maps.Map | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);

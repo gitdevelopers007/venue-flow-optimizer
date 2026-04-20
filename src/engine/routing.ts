@@ -1,4 +1,4 @@
-import { VenueGraph, VenueNode, RouteResult } from './types';
+import type { VenueGraph, VenueNode, RouteResult } from './types';
 
 export class RoutingEngine {
   private graph: VenueGraph;
