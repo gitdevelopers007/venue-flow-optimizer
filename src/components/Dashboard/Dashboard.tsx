@@ -108,22 +108,24 @@ const NavItem = ({ active, icon, label, onClick, ariaLabel }: any) => (
   <button 
     onClick={onClick}
     aria-label={ariaLabel || label}
-    className={`p-3 rounded-xl flex items-center justify-center transition-all relative group ${active ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-white/5'}`}
+    aria-pressed={active}
+    role="tab"
+    className={`p-3 rounded-xl flex items-center justify-center transition-all relative group focus:outline-none focus:ring-2 focus:ring-blue-400 ${active ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-white/5'}`}
   >
     {icon}
-    <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black/80 text-white text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+    <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black/80 text-white text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none" aria-hidden="true">
       {label}
     </div>
   </button>
 );
 
 const InsightItem = ({ label, status, color, value }: any) => (
-  <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+  <div className="p-3 rounded-xl bg-white/5 border border-white/5" role="status" aria-live="polite">
     <div className="flex justify-between items-center mb-1">
       <span className="text-sm font-medium">{label}</span>
       <span className={`text-[10px] font-bold uppercase ${color}`}>{status}</span>
     </div>
-    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden" aria-hidden="true">
       <div className={`h-full rounded-full ${color.replace('text', 'bg')}`} style={{ width: value === 'High' ? '85%' : value === 'Medium' ? '45%' : '15%' }} />
     </div>
   </div>
