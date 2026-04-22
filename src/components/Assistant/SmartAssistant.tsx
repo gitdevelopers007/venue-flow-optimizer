@@ -1,87 +1,101 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MessageSquare, AlertCircle, CheckCircle2, ChevronRight, Mic } from 'lucide-react';
-import { logEvent } from 'firebase/analytics';
-import { analytics } from '../../services/firebase';
+import { MessageSquare, AlertCircle, CheckCircle2, ChevronRight, Mic, X } from 'lucide-react';
 
 interface AssistantProps {
   congestionLevel: number;
+  onApplyRoute?: () => void;
 }
 
-const SmartAssistant: React.FC<AssistantProps> = React.memo(({ congestionLevel }) => {
+const SmartAssistant: React.FC<AssistantProps> = React.memo(({ congestionLevel, onApplyRoute }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [listening, setListening] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  // Efficiency: useMemo for pure state logic
   const suggestion = useMemo(() => {
     if (congestionLevel > 0.7) {
       return {
-        title: "Heavy Traffic Detected",
-        message: "Main Gate is currently at 85% capacity. Rerouting via Gate B will save you approximately 12 minutes.",
-        type: "warning",
-        icon: <AlertCircle size={20} className="text-amber-400" />
+        title: 'Heavy Traffic Detected',
+        message: 'Main Gate is at 85% capacity. Rerouting via Gate B saves ~12 minutes.',
+        type: 'warning',
+        icon: <AlertCircle size={20} style={{ color: '#fbbf24' }} />,
       };
     }
     return {
-      title: "Path Optimal",
-      message: "Current route to your seat is clear. Concession wait times are under 5 minutes.",
-      type: "success",
-      icon: <CheckCircle2 size={20} className="text-emerald-400" />
+      title: 'Path Optimal',
+      message: 'Current route to your seat is clear. Concession wait times are under 5 minutes.',
+      type: 'success',
+      icon: <CheckCircle2 size={20} style={{ color: '#34d399' }} />,
     };
   }, [congestionLevel]);
 
   useEffect(() => {
-    // Simulate AI proactive suggestion delay
     const timer = setTimeout(() => setIsVisible(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 
   const handleVoiceCommand = useCallback(() => {
     setListening(true);
-    if (analytics) logEvent(analytics, 'voice_command_activated');
-    // Mocking Google Cloud Speech-to-Text / Dialogflow CX
     setTimeout(() => {
       setListening(false);
-      alert("Google Dialogflow CX Mock: Processing intent...");
-    }, 2000);
+    }, 2500);
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible || dismissed) return null;
 
   return (
-    <div className="fixed bottom-24 right-8 w-80 animate-slide-up z-30">
-      <div className="glass-card overflow-hidden border border-blue-500/20 shadow-[0_8px_32px_rgba(59,130,246,0.15)]">
-        <div className="bg-gradient-to-r from-blue-600/20 to-blue-900/20 p-3 flex items-center justify-between border-b border-white/5">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <MessageSquare size={16} className="text-blue-400" />
-              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-            </div>
-            <span className="text-xs font-bold tracking-wider text-blue-200">VENUE AI ASSISTANT</span>
+    <div className="assistant-wrap animate-slide-up">
+      <div className="glass-card assistant-card">
+        <div className="assistant-header">
+          <div className="assistant-title">
+            <span className="assistant-dot">
+              <MessageSquare size={14} />
+            </span>
+            VENUE AI ASSISTANT
           </div>
-          <button 
-            onClick={handleVoiceCommand}
-            className={`p-1.5 rounded-full transition-colors ${listening ? 'bg-rose-500/20 text-rose-400 animate-pulse' : 'bg-white/5 hover:bg-white/10 text-gray-400'}`}
-            aria-label="Activate Voice Command"
-          >
-            <Mic size={14} />
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              onClick={handleVoiceCommand}
+              className={`voice-btn ${listening ? 'listening' : ''}`}
+              aria-label="Activate Voice Command"
+            >
+              <Mic size={13} />
+            </button>
+            <button
+              onClick={() => setDismissed(true)}
+              className="voice-btn"
+              aria-label="Dismiss assistant"
+            >
+              <X size={13} />
+            </button>
+          </div>
         </div>
-        
-        <div className="p-4">
-          <div className="flex gap-3 items-start">
-            <div className="mt-1">{suggestion.icon}</div>
-            <div>
-              <h4 className="font-semibold text-sm mb-1 text-white">{suggestion.title}</h4>
-              <p className="text-xs text-gray-300 leading-relaxed mb-3">
-                {suggestion.message}
-              </p>
-              
-              <button className="flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors group">
-                Apply Smart Route 
-                <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </button>
+
+        <div className="assistant-body">
+          {listening ? (
+            <div style={{ textAlign: 'center', padding: '12px 0' }}>
+              <div style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                background: 'rgba(239,68,68,0.15)', margin: '0 auto 10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'pulse 1.5s ease infinite',
+              }}>
+                <Mic size={20} style={{ color: '#f87171' }} />
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8' }}>Listening...</div>
             </div>
-          </div>
+          ) : (
+            <div className="suggestion-row">
+              <div className="suggestion-icon">{suggestion.icon}</div>
+              <div>
+                <div className="suggestion-title">{suggestion.title}</div>
+                <div className="suggestion-text">{suggestion.message}</div>
+                <button className="suggestion-action" onClick={onApplyRoute}>
+                  Apply Smart Route
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
